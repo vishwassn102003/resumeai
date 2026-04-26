@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume Builder — ResumeAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090e;--bg2:#0f0f17;--bg3:#161622;--bg4:#1d1d2c;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#f0eeff;--text2:#9896ae;--text3:#55536a;
+  --gold:#c6a76d;--gold2:#dfc28e;
+  --success:#4ade80;--danger:#f87171;
+  --fd:'DM Serif Display',Georgia,serif;
+  --fb:'Inter',system-ui,sans-serif;
+  --fm:'IBM Plex Mono',monospace;
+}
+html,body{height:100%;-webkit-font-smoothing:antialiased}
+body{font-family:var(--fb);background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden}
+
+/* TOPBAR */
+.topbar{height:54px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;z-index:50}
+.tlogo{display:flex;align-items:center;gap:8px;text-decoration:none}
+.logo-box{width:24px;height:24px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:5px;display:grid;place-items:center;font-family:var(--fb);font-weight:700;font-size:11px;color:#09090e;flex-shrink:0}
+.logo-txt{font-family:var(--fd);font-size:17px;color:var(--text)}
+.tsteps{display:flex;align-items:center;gap:0}
+.tstep{display:flex;align-items:center;gap:7px;padding:6px 14px;font-size:11.5px;font-weight:500;font-family:var(--fm);color:var(--text3);letter-spacing:.02em;transition:color .2s}
+.tstep.active{color:var(--gold)}
+.tstep.done{color:var(--success)}
+.tsep{color:var(--text3);font-size:12px;padding:0 2px}
+.tstep-n{width:19px;height:19px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;font-size:9px;flex-shrink:0}
+.tstep.done .tstep-n{background:var(--success);border-color:var(--success);color:#09090e}
+.tright{display:flex;align-items:center;gap:10px}
+.btn-regen{font-family:var(--fb);font-size:12px;font-weight:500;color:var(--text2);background:var(--bg3);border:1px solid var(--border2);padding:7px 13px;border-radius:6px;cursor:pointer;transition:all .2s;display:none;align-items:center;gap:6px}
+.btn-regen:hover{color:var(--text);border-color:rgba(255,255,255,.2)}
+.btn-regen.show{display:flex}
+.btn-dl{font-family:var(--fb);font-size:13px;font-weight:600;color:#09090e;background:linear-gradient(135deg,var(--gold),var(--gold2));padding:9px 20px;border-radius:6px;border:none;cursor:pointer;transition:all .2s;display:none;align-items:center;gap:7px}
+.btn-dl:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(198,167,109,.3)}
+.btn-dl.show{display:flex}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:420px 1fr;height:calc(100vh - 54px)}
+
+/* FORM PANEL */
+.fpanel{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;position:relative}
+.fscroll{flex:1;overflow-y:auto;padding:0 22px 130px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.fscroll::-webkit-scrollbar{width:3px}
+.fscroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.fhead{padding:22px 0 10px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.fhead h2{font-family:var(--fd);font-size:19px;font-weight:400;color:var(--text);margin-bottom:2px;letter-spacing:-.01em}
+.fhead p{font-size:11.5px;color:var(--text3);font-family:var(--fm)}
+
+.fsec{margin-bottom:22px}
+.fsec-title{font-size:9px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);font-family:var(--fm);padding:12px 0 9px;border-bottom:1px solid var(--border);margin-bottom:13px}
+
+label{font-size:11.5px;font-weight:500;color:var(--text2);display:block;margin-bottom:4px;letter-spacing:.01em}
+input,textarea{width:100%;font-family:var(--fb);font-size:13px;color:var(--text);background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:9px 11px;outline:none;transition:border-color .2s,background .2s;resize:vertical}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+input:focus,textarea:focus{border-color:rgba(198,167,109,.4);background:var(--bg4)}
+textarea{min-height:68px;line-height:1.5}
+.field{margin-bottom:10px}
+.hint{font-size:11px;color:var(--text3);margin-top:3px;font-style:italic}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.eblock{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:9px;position:relative}
+.eblock-hd{font-size:10px;font-weight:500;color:var(--gold);font-family:var(--fm);margin-bottom:11px;letter-spacing:.05em;text-transform:uppercase}
+.rm{position:absolute;top:9px;right:9px;background:none;border:none;font-size:16px;color:var(--text3);cursor:pointer;width:24px;height:24px;border-radius:4px;display:grid;place-items:center;transition:all .15s}
+.rm:hover{background:rgba(248,113,113,.1);color:var(--danger)}
+
+.addbtn{width:100%;font-family:var(--fb);font-size:12px;font-weight:500;color:var(--gold);background:transparent;border:1px dashed rgba(198,167,109,.22);border-radius:7px;padding:9px;cursor:pointer;transition:all .2s;margin-top:3px}
+.addbtn:hover{background:rgba(198,167,109,.06);border-color:rgba(198,167,109,.38)}
+
+/* GENERATE BUTTON */
+.ffoot{position:absolute;bottom:0;left:0;right:0;padding:14px 22px 18px;background:linear-gradient(to top,var(--bg2) 72%,transparent)}
+.btn-gen{width:100%;font-family:var(--fb);font-size:14px;font-weight:600;color:#09090e;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:9px;padding:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:all .2s;position:relative;overflow:hidden}
+.btn-gen::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.18),transparent);opacity:0;transition:opacity .2s}
+.btn-gen:hover::before{opacity:1}
+.btn-gen:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(198,167,109,.3)}
+.btn-gen:disabled{background:var(--bg3);color:var(--text3);cursor:not-allowed;transform:none;box-shadow:none}
+.btn-gen:disabled::before{display:none}
+.spin{width:16px;height:16px;border:2px solid rgba(9,9,14,.2);border-top-color:#09090e;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.spin.on{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* PREVIEW PANEL */
+.ppanel{background:#0b0b12;display:flex;flex-direction:column;overflow:hidden}
+.pbar{padding:14px 30px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0}
+.plabel{font-family:var(--fm);font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.1em;text-transform:uppercase}
+.phint{font-family:var(--fm);font-size:11px;color:var(--text3)}
+.pscroll{flex:1;overflow-y:auto;padding:30px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.pscroll::-webkit-scrollbar{width:3px}
+.pscroll::-webkit-scrollbar-thumb{background:var(--border2)}
+
+/* PAPER */
+#paper{background:#fff;max-width:680px;margin:0 auto;padding:44px 48px;min-height:840px;box-shadow:0 0 0 1px rgba(255,255,255,.06),0 24px 80px rgba(0,0,0,.65);font-family:'Inter',sans-serif;font-size:13px;line-height:1.55;color:#111;border-radius:4px}
+
+/* EMPTY STATE */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px}
+.eico{width:70px;height:70px;background:var(--bg3);border:1px solid var(--border2);border-radius:18px;display:grid;place-items:center;margin:0 auto 18px;font-size:28px}
+.etitle{font-family:var(--fd);font-size:21px;font-weight:400;color:var(--text);margin-bottom:8px}
+.esub{font-size:13px;color:var(--text3);line-height:1.65}
+.esub strong{color:var(--gold)}
+
+/* RESUME RENDER STYLES */
+.rv-name{text-align:center;font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#0a0a0a;margin-bottom:6px}
+.rv-contact{text-align:center;font-size:11px;color:#555;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:2px 12px;justify-content:center}
+.rv-contact a{color:#1a56db;text-decoration:none}
+.rv-section{margin-bottom:14px}
+.rv-sh{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;border-bottom:1.5px solid #111;padding-bottom:2px;margin-bottom:8px;color:#0a0a0a}
+.rv-profile{font-size:12px;color:#222;line-height:1.65}
+.rv-skills p{font-size:12px;margin-bottom:3px;color:#222}
+.rv-entry{margin-bottom:10px}
+.rv-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px}
+.rv-title{font-weight:700;font-size:12px;color:#111}
+.rv-date{font-size:11px;color:#555;white-space:nowrap;margin-left:10px}
+.rv-sub{font-size:11.5px;color:#444;margin-bottom:3px}
+.rv-tech{font-size:11px;color:#666;font-style:italic;margin-bottom:3px}
+.rv-ul{padding-left:14px;list-style:disc;margin:3px 0 0}
+.rv-ul li{font-size:11.5px;color:#222;line-height:1.6;margin-bottom:2px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:11px 16px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.4);display:none;align-items:center;gap:9px;max-width:300px;animation:tin .3s ease}
+.toast.show{display:flex}
+.toast.ok{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.22);color:var(--success)}
+.toast.err{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22);color:var(--danger)}
+@keyframes tin{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:500}
+.overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:38px;max-width:390px;width:90%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.5)}
+.mbadge{display:inline-flex;align-items:center;gap:6px;background:rgba(198,167,109,.08);border:1px solid rgba(198,167,109,.2);color:var(--gold);border-radius:100px;font-size:10px;font-weight:500;padding:5px 14px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:16px;font-family:var(--fm)}
+.modal h2{font-family:var(--fd);font-size:25px;font-weight:400;color:var(--text);margin-bottom:6px}
+.modal p{font-size:13.5px;font-weight:300;color:var(--text2);margin-bottom:20px;line-height:1.65}
+.mprice{font-family:var(--fd);font-size:50px;font-weight:400;color:transparent;background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;background-clip:text;line-height:1;margin-bottom:4px}
+.mpsub{font-family:var(--fm);font-size:11px;color:var(--text3);margin-bottom:22px}
+.mfeats{list-style:none;text-align:left;margin-bottom:22px;background:var(--bg3);border-radius:8px;padding:14px}
+.mfeats li{font-size:13px;color:var(--text2);padding:6px 0;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border)}
+.mfeats li:last-child{border:none}
+.mcheck{color:var(--gold);font-size:11px}
+.btn-pay{width:100%;font-family:var(--fb);font-size:14px;font-weight:600;color:#09090e;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:9px;padding:13px;cursor:pointer;transition:all .2s;margin-bottom:9px}
+.btn-pay:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(198,167,109,.3)}
+.btn-later{background:none;border:none;font-size:13px;color:var(--text3);cursor:pointer;font-family:var(--fb);padding:3px}
+.btn-later:hover{color:var(--text)}
+.mnote{font-family:var(--fm);font-size:10.5px;color:var(--text3);margin-top:13px}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .ppanel{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <a href="/" class="tlogo"><div class="logo-box">R</div><span class="logo-txt">ResumeAI</span></a>
+  <div class="tsteps">
+    <div class="tstep active" id="s1"><div class="tstep-n">1</div>Fill details</div>
+    <div class="tsep">›</div>
+    <div class="tstep" id="s2"><div class="tstep-n">2</div>Preview</div>
+    <div class="tsep">›</div>
+    <div class="tstep" id="s3"><div class="tstep-n">3</div>Download</div>
+  </div>
+  <div class="tright">
+    <button class="btn-regen" id="rbtn" onclick="generate()">↻ Regenerate</button>
+    <button class="btn-dl" id="dlbtn" onclick="openModal()">⬇ Download PDF — ₹99</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- FORM -->
+  <div class="fpanel">
+    <div class="fscroll">
+      <div class="fhead">
+        <h2>Build your resume</h2>
+        <p>fill · generate · preview free · pay ₹99 to download</p>
+      </div>
+
+      <!-- Personal -->
+      <div class="fsec">
+        <div class="fsec-title">Personal info</div>
+        <div class="field"><label>Full name *</label><input id="f-name" placeholder="e.g. Vishwas S N"/></div>
+        <div class="two">
+          <div class="field"><label>Email</label><input id="f-email" type="email" placeholder="you@gmail.com"/></div>
+          <div class="field"><label>Phone</label><input id="f-phone" placeholder="91XXXXXXXX"/></div>
+        </div>
+        <div class="two">
+          <div class="field"><label>LinkedIn</label><input id="f-li" placeholder="linkedin.com/in/you"/></div>
+          <div class="field"><label>GitHub</label><input id="f-gh" placeholder="github.com/you"/></div>
+        </div>
+        <div class="field"><label>Target job role *</label><input id="f-role" placeholder="e.g. Backend Developer, SDE-1"/></div>
+      </div>
+
+      <!-- Profile -->
+      <div class="fsec">
+        <div class="fsec-title">Profile summary</div>
+        <div class="field">
+          <label>Your experience — raw notes, AI will write it properly</label>
+          <textarea id="f-profile" rows="4" placeholder="e.g. 6 months Python Flask, built REST APIs, AWS S3, PostgreSQL, interned at startup, 2 projects on face recognition and translation..."></textarea>
+          <div class="hint">No formatting needed. Just paste your notes as-is.</div>
+        </div>
+      </div>
+
+      <!-- Skills -->
+      <div class="fsec">
+        <div class="fsec-title">Technical skills</div>
+        <div class="field"><label>Languages / Backend</label><input id="f-sl" placeholder="Python, SQL, Flask, REST APIs"/></div>
+        <div class="field"><label>Database / Cloud</label><input id="f-sd" placeholder="PostgreSQL, MySQL, AWS S3, Rekognition"/></div>
+        <div class="field"><label>Tools</label><input id="f-st" placeholder="Git, GitHub, Postman, VS Code"/></div>
+      </div>
+
+      <!-- Education -->
+      <div class="fsec">
+        <div class="fsec-title">Education</div>
+        <div id="edu-list"></div>
+        <button class="addbtn" onclick="add('edu')">+ Add education</button>
+      </div>
+
+      <!-- Experience -->
+      <div class="fsec">
+        <div class="fsec-title">Internship / Work experience</div>
+        <div id="exp-list"></div>
+        <button class="addbtn" onclick="add('exp')">+ Add internship or job</button>
+      </div>
+
+      <!-- Projects -->
+      <div class="fsec">
+        <div class="fsec-title">Projects</div>
+        <div id="proj-list"></div>
+        <button class="addbtn" onclick="add('proj')">+ Add project</button>
+      </div>
+    </div>
+
+    <div class="ffoot">
+      <button class="btn-gen" id="genbtn" onclick="generate()">
+        <div class="spin" id="spin"></div>
+        <span id="gentxt">✨ Generate my resume</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="ppanel">
+    <div class="pbar">
+      <span class="plabel">Live preview</span>
+      <span class="phint" id="phint">Fill details → click Generate</span>
+    </div>
+    <div class="pscroll">
+      <div id="paper">
+        <div class="empty">
+          <div class="eico">📄</div>
+          <div class="etitle">Your resume preview</div>
+          <div class="esub">Fill in your details on the left<br>and click <strong>Generate my resume</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="mbadge">✦ Resume ready</div>
+    <h2>Download your resume</h2>
+    <p>One-time payment to get your clean ATS-optimised PDF.</p>
+    <div class="mprice">₹99</div>
+    <div class="mpsub">one-time · no subscription · instant download</div>
+    <ul class="mfeats">
+      <li><span class="mcheck">✦</span>ATS-optimised PDF — works at TCS, Infosys, Wipro</li>
+      <li><span class="mcheck">✦</span>Clean professional formatting</li>
+      <li><span class="mcheck">✦</span>Instant download after payment</li>
+      <li><span class="mcheck">✦</span>UPI · Cards · Net Banking via Razorpay</li>
+    </ul>
+    <button class="btn-pay" onclick="pay()">Pay ₹99 &amp; Download Now</button>
+    <button class="btn-later" onclick="closeModal()">Maybe later</button>
+    <div class="mnote">🔒 100% secure · Powered by Razorpay</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+let C={edu:0,exp:0,proj:0};
+let rData=null,rJson=null;
+
+function g(id){return(document.getElementById(id)?.value||'').trim()}
+
+function add(type){
+  const i=C[type]++;
+  const el=document.createElement('div');
+  el.className='eblock';el.id=type+'-'+i;
+  if(type==='edu'){
+    el.innerHTML=`<button class="rm" onclick="rm('edu-${i}')">×</button>
+    <div class="eblock-hd">Education ${i+1}</div>
+    <div class="field"><label>Institution</label><input placeholder="East West College of Engineering, Bangalore" id="e-inst-${i}"/></div>
+    <div class="field"><label>Degree / Course</label><input placeholder="B.E in Computer Science and Engineering" id="e-deg-${i}"/></div>
+    <div class="two">
+      <div class="field"><label>Score</label><input placeholder="7.7 CGPA or 83%" id="e-sc-${i}"/></div>
+      <div class="field"><label>Year</label><input placeholder="2021–2025" id="e-yr-${i}"/></div>
+    </div>`;
+  }else if(type==='exp'){
+    el.innerHTML=`<button class="rm" onclick="rm('exp-${i}')">×</button>
+    <div class="eblock-hd">Experience ${i+1}</div>
+    <div class="field"><label>Role &amp; Company</label><input placeholder="Backend Developer Intern — SnapShare.ai" id="x-role-${i}"/></div>
+    <div class="field"><label>Duration</label><input placeholder="Sept 2025 – Nov 2025" id="x-dur-${i}"/></div>
+    <div class="field"><label>What you did (raw notes)</label><textarea placeholder="Built REST APIs, integrated AWS S3, optimised PostgreSQL..." id="x-desc-${i}" rows="4"></textarea></div>`;
+  }else{
+    el.innerHTML=`<button class="rm" onclick="rm('proj-${i}')">×</button>
+    <div class="eblock-hd">Project ${i+1}</div>
+    <div class="field"><label>Project name</label><input placeholder="Face Recognition System" id="p-nm-${i}"/></div>
+    <div class="field"><label>Tech stack</label><input placeholder="Flask | AWS Rekognition | PostgreSQL" id="p-tc-${i}"/></div>
+    <div class="field"><label>What you built (raw notes)</label><textarea placeholder="Built face registration system, 98% accuracy..." id="p-dc-${i}" rows="3"></textarea></div>`;
+  }
+  document.getElementById(type+'-list').appendChild(el);
+}
+
+function rm(id){document.getElementById(id)?.remove()}
+
+function collect(){
+  const edu=[],exp=[],proj=[];
+  for(let i=0;i<C.edu;i++) if(document.getElementById('edu-'+i)) edu.push({inst:g('e-inst-'+i),deg:g('e-deg-'+i),score:g('e-sc-'+i),year:g('e-yr-'+i)});
+  for(let i=0;i<C.exp;i++) if(document.getElementById('exp-'+i)) exp.push({role:g('x-role-'+i),dur:g('x-dur-'+i),desc:g('x-desc-'+i)});
+  for(let i=0;i<C.proj;i++) if(document.getElementById('proj-'+i)) proj.push({name:g('p-nm-'+i),tech:g('p-tc-'+i),desc:g('p-dc-'+i)});
+  return{name:g('f-name'),email:g('f-email'),phone:g('f-phone'),linkedin:g('f-li'),github:g('f-gh'),target_role:g('f-role'),profile_raw:g('f-profile'),skills_lang:g('f-sl'),skills_db:g('f-sd'),skills_tools:g('f-st'),edu,exp,proj};
+}
+
+async function generate(){
+  const data=collect();
+  if(!data.name){toast('Please enter your name first','err');return}
+  setBusy(true);step(1);
+  try{
+    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const j=await res.json();
+    if(!res.ok)throw new Error(j.error||'Generation failed');
+    rData=data;rJson=j.resume;
+    render(data,j.resume);
+    step(2);
+    document.getElementById('dlbtn').classList.add('show');
+    document.getElementById('rbtn').classList.add('show');
+    document.getElementById('phint').textContent='✦ Preview ready — scroll to review';
+    toast('Resume generated! Review it on the right.','ok');
+  }catch(e){toast(e.message,'err')}
+  finally{setBusy(false)}
+}
+
+function render(raw,r){
+  const contact=[];
+  if(raw.email) contact.push(`<span>✉ ${raw.email}</span>`);
+  if(raw.linkedin) contact.push(`<span><a href="https://${raw.linkedin}">${raw.linkedin.replace(/.*linkedin\.com\/in\//,'').replace(/\//,'')}</a></span>`);
+  if(raw.phone) contact.push(`<span>📞 ${raw.phone}</span>`);
+  if(raw.github) contact.push(`<span><a href="https://${raw.github}">GitHub</a></span>`);
+
+  const sk=r.skills||{};
+  let skills='';
+  if(sk.languages) skills+=`<p><strong>Languages/Backend:</strong> ${sk.languages}</p>`;
+  if(sk.database)  skills+=`<p><strong>Database/Cloud:</strong> ${sk.database}</p>`;
+  if(sk.tools)     skills+=`<p><strong>Tools:</strong> ${sk.tools}</p>`;
+
+  const eduH=(r.education||raw.edu||[]).filter(e=>e.inst||e.deg).map(e=>`
+    <div class="rv-entry">
+      <div class="rv-row"><span class="rv-title">${e.inst||''}</span><span class="rv-date">${e.year||''}</span></div>
+      <div class="rv-sub">${e.degree||e.deg||''}${e.score?' | '+e.score:''}</div>
+    </div>`).join('');
+
+  const expH=(r.experience||[]).map(e=>`
+    <div class="rv-entry">
+      <div class="rv-row"><span class="rv-title">${e.role}${e.company?' — '+e.company:''}</span><span class="rv-date">${e.duration||''}</span></div>
+      <ul class="rv-ul">${(e.bullets||[]).map(b=>`<li>${b}</li>`).join('')}</ul>
+    </div>`).join('');
+
+  const prjH=(r.projects||[]).map(p=>`
+    <div class="rv-entry">
+      <div class="rv-title">${p.name}</div>
+      <div class="rv-tech">${p.tech||''}</div>
+      <ul class="rv-ul">${(p.bullets||[]).map(b=>`<li>${b}</li>`).join('')}</ul>
+    </div>`).join('');
+
+  document.getElementById('paper').innerHTML=`
+    <div class="rv-name">${raw.name}</div>
+    <div class="rv-contact">${contact.join('')}</div>
+    ${r.profile?`<div class="rv-section"><div class="rv-sh">Profile</div><div class="rv-profile">${r.profile}</div></div>`:''}
+    ${skills?`<div class="rv-section"><div class="rv-sh">Technical Skills</div><div class="rv-skills">${skills}</div></div>`:''}
+    ${eduH?`<div class="rv-section"><div class="rv-sh">Education</div>${eduH}</div>`:''}
+    ${expH?`<div class="rv-section"><div class="rv-sh">Internship</div>${expH}</div>`:''}
+    ${prjH?`<div class="rv-section"><div class="rv-sh">Projects</div>${prjH}</div>`:''}
+  `;
+}
+
+function setBusy(on){
+  const btn=document.getElementById('genbtn');
+  document.getElementById('spin').classList.toggle('on',on);
+  document.getElementById('gentxt').textContent=on?'Generating…':'✨ Regenerate';
+  btn.disabled=on;
+}
+function step(n){
+  ['s1','s2','s3'].forEach((id,i)=>{
+    document.getElementById(id).className='tstep'+(i+1<n?' done':i+1===n?' active':'');
+  });
+}
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=`toast show ${type}`;
+  setTimeout(()=>t.className='toast',3500);
+}
+function openModal(){document.getElementById('overlay').classList.add('open')}
+function closeModal(){document.getElementById('overlay').classList.remove('open')}
+
+async function pay(){
+  try{
+    const res=await fetch('/api/create-order',{method:'POST'});
+    const order=await res.json();
+    if(order.dev){closeModal();download();return}
+    if(order.error)throw new Error(order.error);
+    const rzp=new Razorpay({
+      key:order.key,amount:order.amount,currency:'INR',
+      name:'ResumeAI',description:'Resume PDF Download',
+      order_id:order.order_id,theme:{color:'#c6a76d'},
+      handler:async function(resp){
+        const v=await(await fetch('/api/verify-payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(resp)})).json();
+        if(v.success){closeModal();step(3);toast('Payment successful! Downloading…','ok');download()}
+      }
+    });
+    rzp.open();
+  }catch(e){closeModal();download()}
+}
+
+async function download(){
+  if(!rData||!rJson)return;
+  try{
+    const res=await fetch('/api/download-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({raw_data:rData,resume:rJson})});
+    if(!res.ok){toast('PDF generation failed','err');return}
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=(rData.name||'resume').replace(/ /g,'_')+'_Resume.pdf';
+    a.click();URL.revokeObjectURL(url);
+    step(3);
+  }catch(e){toast('Download failed: '+e.message,'err')}
+}
+
+// Pre-fill with sample data
+window.onload=()=>{
+  document.getElementById('f-name').value='Vishwas S N';
+  document.getElementById('f-email').value='snvishwas92@gmail.com';
+  document.getElementById('f-phone').value='9108008095';
+  document.getElementById('f-li').value='linkedin.com/in/vishwassn';
+  document.getElementById('f-gh').value='github.com/vishwassn';
+  document.getElementById('f-role').value='Backend Developer / Software Engineer';
+  document.getElementById('f-profile').value='Python Flask developer. Built production AI features at SnapShare.ai — face recognition with AWS Rekognition, REST APIs, PostgreSQL optimization, AWS S3 integration. Looking for SDE / backend role.';
+  document.getElementById('f-sl').value='Python, SQL, Flask (REST APIs)';
+  document.getElementById('f-sd').value='PostgreSQL, MySQL, AWS (S3, Rekognition)';
+  document.getElementById('f-st').value='Git, GitHub, Postman, VS Code';
+  add('edu');
+  document.getElementById('e-inst-0').value='East West College of Engineering, Bangalore, Karnataka';
+  document.getElementById('e-deg-0').value='B.E in Computer Science and Engineering';
+  document.getElementById('e-sc-0').value='7.7 CGPA';
+  document.getElementById('e-yr-0').value='2021–2025';
+  add('exp');
+  document.getElementById('x-role-0').value='Backend Developer Intern — SnapShare.ai (Znorm Pvt. Ltd.)';
+  document.getElementById('x-dur-0').value='Sept 2025 – Nov 2025';
+  document.getElementById('x-desc-0').value='Built AWS Rekognition + S3 face-registration system. Optimized PostgreSQL models. Integrated AWS S3 for image storage. Built Python APIs for face indexing. Implemented real-time face verification.';
+  add('proj');
+  document.getElementById('p-nm-0').value='Face Recognition System (Production)';
+  document.getElementById('p-tc-0').value='Flask | AWS Rekognition | S3 | PostgreSQL';
+  document.getElementById('p-dc-0').value='Built secure face registration & matching workflow. 98% accuracy with optimized comparison logic. Scalable backend handling concurrent requests.';
+  add('proj');
+  document.getElementById('p-nm-1').value='Real-Time Translation API';
+  document.getElementById('p-tc-1').value='Python | NLP | SQL';
+  document.getElementById('p-dc-1').value='Built translation API with caching that cut API calls by 50%. SQL analytics for usage monitoring.';
+};
+</script>
+</body>
+</html>
